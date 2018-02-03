@@ -1,7 +1,7 @@
 #include "Knowledge.h"
 	
 namespace Program {
-	void GetOutRabish(const string& in, const string& out) {
+	void GetOutTrash(const string& in, const string& out) {
 		if (in.empty() || out.empty()) {
 			throw std::invalid_argument(EXCEPT("Wrong filename"));
 		}
@@ -83,21 +83,21 @@ namespace Program {
 			return false;
 		}
 		for (size_t i(0); i < notif.size(); i++) {
-			if (tolower(lhs[i]) == tolower(notif[i])) {
+			if (lhs[i] == notif[i]) {
 				is_equal.push_back(true);
 			}
 			else {
 				is_equal.push_back(false);
 			}
 		}
-		return std::count(begin(is_equal), end(is_equal), true) > (is_equal.size() / 2) ||
+		return std::count(begin(is_equal), end(is_equal), true) > (is_equal.size() / 3) ||
 			is_contain(SplitIntoWords(lhs), SplitIntoWords(notif));
 	}
 
 	Knowledge::Knowledge(const string& filename) {
-		string DB_name = "db.txt";
-		GetOutRabish(filename, DB_name);
-		std::ifstream fin("db.txt");
+		string db = "db.txt";
+		GetOutTrash(filename, db);
+		std::ifstream fin(db);
 
 		if (!fin.is_open()) {
 			throw std::runtime_error(EXCEPT("File is not open!"));
@@ -113,11 +113,23 @@ namespace Program {
 				}
 				auto it = find(begin(temp_notion), end(temp_notion), '—');
 				not_to_dif.insert({ { begin(temp_notion), it-1 },{ it+2,end(temp_notion) } });
-
-				//temp_notion.clear();
-				//temp_diff.clear();
 			}
 		}
+	}
+	Knowledge::Knowledge(const Knowledge& cp) {
+		not_to_dif.clear();
+		not_to_dif = cp.not_to_dif;
+	}
+	Knowledge& Knowledge::operator=(const Knowledge& val) {
+		not_to_dif = val.not_to_dif;
+		return *this;
+	}
+	Knowledge& Knowledge::operator+=(const Knowledge& val) {
+		map<string, string> ret;
+		std::set_union(begin(not_to_dif), end(not_to_dif),
+			begin(val.not_to_dif), end(val.not_to_dif), std::inserter(ret, begin(ret)));
+		this->not_to_dif = ret;
+		return *this;
 	}
 
 	vector<pair<string, string>> Knowledge::find_dif(const string& notif) const noexcept {

@@ -1,4 +1,3 @@
-
 #include <conio.h>
 
 #include "Knowledge.h"
@@ -26,6 +25,13 @@ void PrintFile(const string& filename) {
 
 int main() {
 	setlocale(LC_ALL, "Russian");
+	Program::Knowledge data("FullText.txt");
+	try {
+		std::cout << data.find_dif("Альтруим");
+	}
+	catch (const std::exception& exc) {
+		std::cout << exc.what();
+	}
 	//GetOutRabish("a.txt", "out.txt");
 	//PrintFile("out.txt");
 	//vector<string> str;
@@ -51,9 +57,6 @@ int main() {
 	//Print(begin(str), end(str));
 	//std::cout << Program::SplitIntoWords("String compare");
 
-	Program::Knowledge base("db.txt");
-	std::cout << base.find_dif("буба - кики");
-	
 	_getch();
 	return 0;
 }
