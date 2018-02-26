@@ -2,11 +2,6 @@
 
 #include "Knowledge.h"
 
-using std::set;
-using std::map;
-using std::vector;
-using std::string;
-
 template<typename Iter>
 void Print(const Iter& begin, const Iter& end) {
 	vector<Iter::value_type> range(begin, end);
@@ -25,13 +20,31 @@ void PrintFile(const string& filename) {
 
 int main() {
 	setlocale(LC_ALL, "Russian");
-	Program::Knowledge data("FullText.txt");
-	try {
-		std::cout << data.find_dif("Альтруим");
+
+	Program::Knowledge bd("db1.txt",true);
+	for (int i(0); i < 10000; ++i) {
+		try {
+			if (bd.GetSomeNotif(15).size() != 150) {
+				std::cout << bd.GetSomeNotif(150).size() << std::endl;
+			}
+		}
+		catch (const std::exception& ex) {
+			std::cout << ex.what();
+		}
 	}
-	catch (const std::exception& exc) {
-		std::cout << exc.what();
-	}
+
+	/*Program::Knowledge tom1("tom1.txt");
+	std::cout << tom1.size() << std::endl;
+
+	Program::Knowledge tom2("tom2.txt");
+	std::cout << tom2.size() << std::endl;
+	
+	Program::Knowledge tom3;
+	tom3 += tom1;
+	tom3 += tom2;
+
+	std::cout << tom3 << std::endl;
+	std::cout << tom3.size();*/
 	//GetOutRabish("a.txt", "out.txt");
 	//PrintFile("out.txt");
 	//vector<string> str;

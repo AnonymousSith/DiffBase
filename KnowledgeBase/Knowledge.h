@@ -1,39 +1,73 @@
 #pragma once
-#pragma comment(lib, "C:/Users/Кирилл/Desktop/C++/Libs/CollectionOut/Debug/CollectionOut.lib")
 
 #ifndef _KNOWLEDGE_H
 #define _KNOWLEDGE_H
 
 #include <algorithm>
+#include <iostream>
 #include <iterator>
 #include <utility>
 #include <fstream>
-//#include <cctype>
 #include <string>
+#include <random>
+#include <vector>
 #include <map>
 #include <set>
 
+#include "PrintCollection.h"
 #include "EXCEPT.h"
-#include "C:/Users/Кирилл/Desktop/C++/Libs/CollectionOut/CollectionOut/stdafx.h"
+#include <time.h>
 
-
+using std::map;
+using std::set;
+using std::pair;
+using std::string;
+using std::vector;
 
 namespace Program {
+	struct Termin {
+		string notification;
+		string diffinition;
+	};
+
 	class Knowledge {
 	private:
 		map<string, string> not_to_dif; // термин - определение
 		
 		friend vector<string> SplitIntoWords(const string&);
 		friend bool is_contain(vector<string>, vector<string>);
+		friend std::string GetOutStrTrash(std::string);
 	public:
 		Knowledge() : not_to_dif() {};
-		Knowledge(const string&);
+		Knowledge(const string&, bool is_clear=false);
 		Knowledge(const Knowledge&);
+		~Knowledge();
 		Knowledge& operator=(const Knowledge&);
 		Knowledge& operator+=(const Knowledge&);
 
+		pair<string, string> operator[](size_t index) const {
+			if (index > not_to_dif.size()) {
+				throw std::out_of_range(EXCEPT("Index more than range size"));
+			}
+
+			size_t i = 0;
+			for (const auto& item : not_to_dif) {
+				if (i == index) {
+					return item;
+				}
+				++i;
+			}
+		}
+
 		inline size_t size() const {
 			return not_to_dif.size();
+		}
+
+		auto _begin() const{
+			return not_to_dif.begin();
+		}
+		auto _end() const {
+			return not_to_dif.end();
 		}
 
 		int count(const string& dif) const {
@@ -43,33 +77,18 @@ namespace Program {
 			});
 		}
 
-		vector<pair<string, string>> find_dif(const string&) const noexcept;
+		map<string, string> find_dif(const string&) const noexcept;
 
-		map<string, string> unde_the_letter(char letter) const{
-			if (std::count_if(begin(not_to_dif), end(not_to_dif),
-				[letter](const pair<string,string>& val) {
-				return val.first[0] == letter;
-			}) < 1) {
-				throw std::runtime_error(EXCEPT("Not found. May be wrong register"));
-			}
+		map<string, string> unde_the_letter(char) const;
 
-			auto it = std::find_if(begin(not_to_dif), end(not_to_dif), 
-				[letter](const pair<string, string>& val) {
-				return val.first[0] == letter;
-			});
-			
-			auto it_end = it;
-			while (it_end->first[0] == letter) {
-				it_end++;
-			}
-			return { it, it_end };
-		}
+		map<string, string> GetSomeNotif(size_t, const set<char>&) const;
+		map<string, string> GetSomeNotif(size_t) const;
 
-		void AddTerm(const string& notiff, const string& diff) {
-			if (notiff.empty() || diff.empty()) {
+		void Add(const pair<string, string>& val) {
+			if (val.first.empty() || val.second.empty()) {
 				throw std::invalid_argument(EXCEPT("Invalid notification of diffinition"));
 			}
-			not_to_dif.insert({ notiff, diff });
+			not_to_dif.insert(val);
 		}
 
 		friend void GetOutTrash(const string&, const string&);

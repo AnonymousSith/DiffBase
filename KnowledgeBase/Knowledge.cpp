@@ -1,6 +1,11 @@
 #include "Knowledge.h"
 	
 namespace Program {
+	std::string GetOutStrTrash(std::string str) {
+		auto it = std::find(begin(str), end(str), '.');
+		str.erase(it, end(str));
+		return str;
+	}
 	void GetOutTrash(const string& in, const string& out) {
 		if (in.empty() || out.empty()) {
 			throw std::invalid_argument(EXCEPT("Wrong filename"));
@@ -36,10 +41,8 @@ namespace Program {
 				mediator.insert(temp);
 			}
 		}
-		fin.close();
-
 		mediator.erase("");
-
+	
 		std::ofstream fout(out);
 		fout << mediator;
 	}
@@ -80,24 +83,41 @@ namespace Program {
 			if (is_contain(SplitIntoWords(lhs), SplitIntoWords(notif))) {
 				return true;
 			}
-			return false;
-		}
-		for (size_t i(0); i < notif.size(); i++) {
-			if (lhs[i] == notif[i]) {
-				is_equal.push_back(true);
+			int size = lhs.size() < notif.size() ? lhs.size() : notif.size();
+			for (int i(0); i < size; i++) {
+				if (lhs[i] == notif[i]) {
+					is_equal.push_back(true);
+				}
+				else {
+					is_equal.push_back(false);
+				}
 			}
-			else {
-				is_equal.push_back(false);
+		}
+		else {
+			for (size_t i(0); i < notif.size(); i++) {
+				if (lhs[i] == notif[i]) {
+					is_equal.push_back(true);
+				}
+				else {
+					is_equal.push_back(false);
+				}
 			}
 		}
-		return std::count(begin(is_equal), end(is_equal), true) > (is_equal.size() / 3) ||
+		return std::count(begin(is_equal), end(is_equal), true) > (is_equal.size() / 2.f) ||
 			is_contain(SplitIntoWords(lhs), SplitIntoWords(notif));
 	}
 
-	Knowledge::Knowledge(const string& filename) {
-		string db = "db.txt";
-		GetOutTrash(filename, db);
-		std::ifstream fin(db);
+	Knowledge::Knowledge(const string& filename, bool is_clear) {
+		string db = GetOutStrTrash(filename) + "." + "temp.txt";
+		std::ifstream fin;
+
+		if (!is_clear) {
+			GetOutTrash(filename, db);
+			fin.open(db);
+		}
+		else {
+			fin.open(filename);
+		}
 
 		if (!fin.is_open()) {
 			throw std::runtime_error(EXCEPT("File is not open!"));
@@ -112,8 +132,12 @@ namespace Program {
 					continue;
 				}
 				auto it = find(begin(temp_notion), end(temp_notion), '—');
-				not_to_dif.insert({ { begin(temp_notion), it-1 },{ it+2,end(temp_notion) } });
+				not_to_dif.insert({ { begin(temp_notion), it - 1 },{ it + 2,end(temp_notion) } });
 			}
+		}
+		if (!is_clear) {
+			fin.close();
+			system((string("del ") + db).c_str());
 		}
 	}
 	Knowledge::Knowledge(const Knowledge& cp) {
@@ -125,44 +149,76 @@ namespace Program {
 		return *this;
 	}
 	Knowledge& Knowledge::operator+=(const Knowledge& val) {
-		map<string, string> ret;
+		map<string, string> ret = not_to_dif;
+
 		std::set_union(begin(not_to_dif), end(not_to_dif),
 			begin(val.not_to_dif), end(val.not_to_dif), std::inserter(ret, begin(ret)));
+
 		this->not_to_dif = ret;
 		return *this;
 	}
+	Knowledge::~Knowledge() {
+		if (not_to_dif.empty()) {
+			return;
+		}
+		static int countobj = 1;
+		std::ofstream fout("db" + std::to_string(countobj) + ".txt");
+		countobj++;
+		fout << not_to_dif;
+	}
 
-	vector<pair<string, string>> Knowledge::find_dif(const string& notif) const noexcept {
-		vector<pair<string, string>> ret;
+	map<string, string> Knowledge::find_dif(const string& notif) const noexcept {
+		map<string, string> ret;
 
 		for (const auto& item : not_to_dif) {
 			if (item.first == notif) {
-				ret.push_back(item);
+				ret.insert(item);
 			}
-
-			/*if (item.first.size() != notif.size()) {
-				if (is_contain(SplitIntoWords(item.first), SplitIntoWords(notif))) {
-					ret.push_back(item);
-				}
-				continue;
-			}
-			else {
-				for (size_t i(0); i < notif.size(); i++) {
-					if (tolower(item.first[i]) == tolower(notif[i])) {
-						is_equal.push_back(true);
-					}
-					else {
-						is_equal.push_back(false);
-					}
-				}
-			}
-			if ((std::count(begin(is_equal), end(is_equal), true) > (is_equal.size() / 2)) ||
-				is_contain(SplitIntoWords(item.first), SplitIntoWords(notif))) {
-				ret.push_back(item);
-			}
-			is_equal.clear();
-		}*/
 		}
 			return ret;
+	}
+	map<string, string> Knowledge::unde_the_letter(char letter) const {
+		if (std::count_if(begin(not_to_dif), end(not_to_dif),
+			[letter](const pair<string, string>& val) {
+			return val.first[0] == letter;
+		}) < 1) {
+			throw std::runtime_error(EXCEPT("Not found. May be wrong register"));
+		}
+
+		auto it = std::find_if(begin(not_to_dif), end(not_to_dif),
+			[letter](const pair<string, string>& val) {
+			return val.first[0] == letter;
+		});
+
+		auto it_end = it;
+		while (it_end->first[0] == letter) {
+			it_end++;
+		}
+		return { it, it_end };
+	}
+	map<string, string> Knowledge::GetSomeNotif(size_t n, const set<char>& letters) const{
+		if (letters.empty() || n < letters.size()) {
+			throw std::invalid_argument(EXCEPT("Invalid arguments"));
+		}
+		map<string, string> ret;
+		srand(time(NULL));
+
+
+
+		return ret;
+	}
+	map<string, string> Knowledge::GetSomeNotif(size_t n) const {
+		map<string, string> ret;
+		srand(time(NULL));
+		
+		int num = 0;
+		for (size_t i(0); i < n; ++i) {
+			num = rand() % not_to_dif.size() + 1;
+			
+			ret.insert(this->operator[](num));
+		}
+		
+
+		return ret;
 	}
 }
