@@ -167,6 +167,7 @@ namespace Program {
 		fout << not_to_dif;
 	}
 
+
 	map<string, string> Knowledge::find_dif(const string& notif) const noexcept {
 		map<string, string> ret;
 
@@ -203,21 +204,26 @@ namespace Program {
 		map<string, string> ret;
 		srand(time(NULL));
 
-
+		
 
 		return ret;
 	}
 	map<string, string> Knowledge::GetSomeNotif(size_t n) const {
 		map<string, string> ret;
+		vector<pair<string, string>> val(begin(not_to_dif), end(not_to_dif));
+		size_t size = not_to_dif.size();
 		srand(time(NULL));
 		
-		int num = 0;
-		for (size_t i(0); i < n; ++i) {
-			num = rand() % not_to_dif.size() + 1;
-			
-			ret.insert(this->operator[](num));
+		for (size_t i(0); i < n; i++) {
+			ret.insert(val[rand() % size]);
 		}
-		
+
+		while (ret.size() < n) {
+			map<string, string> temp = GetSomeNotif(n - ret.size());
+			std::set_union(begin(ret), end(ret), 
+				begin(temp), end(temp), 
+				std::inserter(ret, end(ret)));
+		}
 
 		return ret;
 	}

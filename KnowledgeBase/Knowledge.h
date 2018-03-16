@@ -11,6 +11,7 @@
 #include <string>
 #include <random>
 #include <vector>
+#include <list>
 #include <map>
 #include <set>
 
@@ -21,15 +22,13 @@
 using std::map;
 using std::set;
 using std::pair;
+using std::list;
 using std::string;
 using std::vector;
 
 namespace Program {
-	struct Termin {
-		string notification;
-		string diffinition;
-	};
-
+	int GetUniqueNumber(size_t);
+	
 	class Knowledge {
 	private:
 		map<string, string> not_to_dif; // термин - определение
@@ -42,10 +41,11 @@ namespace Program {
 		Knowledge(const string&, bool is_clear=false);
 		Knowledge(const Knowledge&);
 		~Knowledge();
+
 		Knowledge& operator=(const Knowledge&);
 		Knowledge& operator+=(const Knowledge&);
 
-		pair<string, string> operator[](size_t index) const {
+		pair<string, string> operator[](size_t index) const{
 			if (index > not_to_dif.size()) {
 				throw std::out_of_range(EXCEPT("Index more than range size"));
 			}
@@ -76,6 +76,7 @@ namespace Program {
 				return val.first == dif;
 			});
 		}
+
 
 		map<string, string> find_dif(const string&) const noexcept;
 
