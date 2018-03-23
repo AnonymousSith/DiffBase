@@ -11,7 +11,6 @@
 #include <string>
 #include <random>
 #include <vector>
-#include <list>
 #include <map>
 #include <set>
 
@@ -22,44 +21,33 @@
 using std::map;
 using std::set;
 using std::pair;
-using std::list;
 using std::string;
 using std::vector;
 
 namespace Program {
-	int GetUniqueNumber(size_t);
-	
+	enum class is_file_clear { CLEAR = true, DURTY = false };
+	using ifc = is_file_clear;
+
 	class Knowledge {
 	private:
 		map<string, string> not_to_dif; // термин - определение
 		
+		friend string GetOutStrTrash(string);
 		friend vector<string> SplitIntoWords(const string&);
 		friend bool is_contain(vector<string>, vector<string>);
-		friend std::string GetOutStrTrash(std::string);
 	public:
-		Knowledge() : not_to_dif() {};
-		Knowledge(const string&, bool is_clear=false);
+		Knowledge() {};
 		Knowledge(const Knowledge&);
-		~Knowledge();
-
+		Knowledge(const map<string, string>&);
+		Knowledge(const string&, ifc is_clear=ifc::DURTY);
 		Knowledge& operator=(const Knowledge&);
+
+		Knowledge operator+(const Knowledge&) const noexcept;
 		Knowledge& operator+=(const Knowledge&);
 
-		pair<string, string> operator[](size_t index) const{
-			if (index > not_to_dif.size()) {
-				throw std::out_of_range(EXCEPT("Index more than range size"));
-			}
+		pair<string, string> operator[](size_t) const;
 
-			size_t i = 0;
-			for (const auto& item : not_to_dif) {
-				if (i == index) {
-					return item;
-				}
-				++i;
-			}
-		}
-
-		inline size_t size() const {
+		size_t size() const {
 			return not_to_dif.size();
 		}
 
@@ -70,13 +58,7 @@ namespace Program {
 			return not_to_dif.end();
 		}
 
-		int count(const string& dif) const {
-			return count_if(begin(not_to_dif), end(not_to_dif), 
-				[dif](const pair<string,string>& val) {
-				return val.first == dif;
-			});
-		}
-
+		int count(const string&) const;
 
 		map<string, string> find_dif(const string&) const noexcept;
 
@@ -85,12 +67,10 @@ namespace Program {
 		map<string, string> GetSomeNotif(size_t, const set<char>&) const;
 		map<string, string> GetSomeNotif(size_t) const;
 
-		void Add(const pair<string, string>& val) {
-			if (val.first.empty() || val.second.empty()) {
-				throw std::invalid_argument(EXCEPT("Invalid notification of diffinition"));
-			}
-			not_to_dif.insert(val);
-		}
+		void DumpToFile() const noexcept;
+
+		void Add(const pair<string, string>&);
+		void Remove(const string&);
 
 		friend void GetOutTrash(const string&, const string&);
 		friend bool operator==(const string&, const string&);

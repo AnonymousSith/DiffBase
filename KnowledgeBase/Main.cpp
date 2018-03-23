@@ -23,14 +23,9 @@ using namespace Program;
 int main() {
 	setlocale(LC_ALL, "Russian");
 
-	//std::cout << bd[103];
-
-	/*double begin = clock();
-	for (int i(0); i < 10; i++) {
-		std::cout << bd.GetSomeNotif(100).size() << "; ";
-	}
-	double end = clock();
-	std::cout << "Time: " << (end - begin) / CLOCKS_PER_SEC;*/
+	Knowledge db3("db1.txt", ifc::CLEAR);
+	std::cout << db3.GetSomeNotif(30);
+	db3.DumpToFile();
 	_getch();
 	return 0;
 }

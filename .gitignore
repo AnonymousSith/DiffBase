@@ -9,6 +9,7 @@
 *.pdf
 *.txt
 *.docx
+*.user
 
 Debug/
 ipch/

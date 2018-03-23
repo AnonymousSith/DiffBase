@@ -107,11 +107,21 @@ namespace Program {
 			is_contain(SplitIntoWords(lhs), SplitIntoWords(notif));
 	}
 
-	Knowledge::Knowledge(const string& filename, bool is_clear) {
+	Knowledge::Knowledge(const Knowledge& cp) {
+		not_to_dif.clear();
+		not_to_dif = cp.not_to_dif;
+	}
+	Knowledge::Knowledge(const map<string, string>& cp) {
+		if (not_to_dif.empty()) { 
+			not_to_dif.clear(); 
+		}
+		not_to_dif = cp;
+	}
+	Knowledge::Knowledge(const string& filename, ifc is_clear) {
 		string db = GetOutStrTrash(filename) + "." + "temp.txt";
 		std::ifstream fin;
 
-		if (!is_clear) {
+		if (is_clear == ifc::DURTY) {
 			GetOutTrash(filename, db);
 			fin.open(db);
 		}
@@ -124,7 +134,7 @@ namespace Program {
 		}
 
 		string temp_notion;
-
+			
 		if (fin) {
 			while (!fin.eof()) {
 				getline(fin, temp_notion);
@@ -135,29 +145,48 @@ namespace Program {
 				not_to_dif.insert({ { begin(temp_notion), it - 1 },{ it + 2,end(temp_notion) } });
 			}
 		}
-		if (!is_clear) {
+		if (is_clear == ifc::DURTY) {
 			fin.close();
 			system((string("del ") + db).c_str());
 		}
-	}
-	Knowledge::Knowledge(const Knowledge& cp) {
-		not_to_dif.clear();
-		not_to_dif = cp.not_to_dif;
 	}
 	Knowledge& Knowledge::operator=(const Knowledge& val) {
 		not_to_dif = val.not_to_dif;
 		return *this;
 	}
-	Knowledge& Knowledge::operator+=(const Knowledge& val) {
-		map<string, string> ret = not_to_dif;
 
+	Knowledge Knowledge::operator+(const Knowledge& val) const noexcept {
+		map<string, string> ret;
 		std::set_union(begin(not_to_dif), end(not_to_dif),
 			begin(val.not_to_dif), end(val.not_to_dif), std::inserter(ret, begin(ret)));
-
-		this->not_to_dif = ret;
-		return *this;
+		return ret;
 	}
-	Knowledge::~Knowledge() {
+	Knowledge& Knowledge::operator+=(const Knowledge& val) {
+		return { *this = (*this + val) };
+	}
+
+	pair<string, string> Knowledge::operator[](size_t index) const {
+		if (index > not_to_dif.size()) {
+			throw std::out_of_range(EXCEPT("Index more than range size"));
+		}
+
+		size_t i = 0;
+		for (const auto& item : not_to_dif) {
+			if (i == index) {
+				return item;
+			}
+			++i;
+		}
+	}
+
+	int Knowledge::count(const string& dif) const {
+		return count_if(begin(not_to_dif), end(not_to_dif),
+			[dif](const pair<string, string>& val) {
+			return val.first == dif;
+		});
+	}
+
+	void Knowledge::DumpToFile() const noexcept{
 		if (not_to_dif.empty()) {
 			return;
 		}
@@ -167,6 +196,20 @@ namespace Program {
 		fout << not_to_dif;
 	}
 
+	void Knowledge::Add(const pair<string, string>& val) {
+		if (val.first.empty() || val.second.empty()) {
+			throw std::invalid_argument(EXCEPT("Invalid notification of diffinition"));
+		}
+		not_to_dif.insert(val);
+	}
+	void Knowledge::Remove(const string& key) {
+		if (not_to_dif.empty()) {
+			return;
+		}
+		//auto it = std::remove(begin(not_to_dif), end(not_to_dif), key);
+		//not_to_dif.erase(it);
+	}
+	
 
 	map<string, string> Knowledge::find_dif(const string& notif) const noexcept {
 		map<string, string> ret;
@@ -193,7 +236,7 @@ namespace Program {
 
 		auto it_end = it;
 		while (it_end->first[0] == letter) {
-			it_end++;
+			++it_end;
 		}
 		return { it, it_end };
 	}
