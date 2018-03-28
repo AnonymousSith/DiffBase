@@ -4,6 +4,7 @@
 #define _KNOWLEDGE_H
 
 #include <algorithm>
+#include <exception>
 #include <iostream>
 #include <iterator>
 #include <utility>
@@ -25,9 +26,19 @@ using std::string;
 using std::vector;
 
 namespace Program {
-	enum class is_file_clear { CLEAR = true, DURTY = false };
+	enum class is_file_clear { clr = true, drt = false };
 	using ifc = is_file_clear;
 
+	class RusAlphabet {
+	private:
+		vector<char> letters;
+	public:
+		RusAlphabet();
+		char get(int) const;
+		size_t size() const noexcept;
+	};
+
+	
 	class Knowledge {
 	private:
 		map<string, string> not_to_dif; // термин - определение
@@ -39,7 +50,7 @@ namespace Program {
 		Knowledge() {};
 		Knowledge(const Knowledge&);
 		Knowledge(const map<string, string>&);
-		Knowledge(const string&, ifc is_clear=ifc::DURTY);
+		Knowledge(const string&, ifc is_clear=ifc::drt);
 		Knowledge& operator=(const Knowledge&);
 
 		Knowledge operator+(const Knowledge&) const noexcept;
@@ -64,10 +75,12 @@ namespace Program {
 
 		map<string, string> unde_the_letter(char) const;
 
-		map<string, string> GetSomeNotif(size_t, const set<char>&) const;
+		map<string, string> GetSomeNotif(size_t, size_t) const;
 		map<string, string> GetSomeNotif(size_t) const;
 
-		void DumpToFile() const noexcept;
+		void DumpToFile(string FileName="") const noexcept;
+
+		size_t usingLetters() const noexcept;
 
 		void Add(const pair<string, string>&);
 		void Remove(const string&);

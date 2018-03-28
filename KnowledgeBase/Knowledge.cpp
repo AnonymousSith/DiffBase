@@ -1,6 +1,29 @@
 #include "Knowledge.h"
 	
 namespace Program {
+	RusAlphabet RusLetters;
+
+	RusAlphabet::RusAlphabet() {
+		letters = { 'À', 'Á', 'Â', 'Ã', 'Ä',
+			'Å', '¨', 'Æ', 'Ç', 'È',
+			'É', 'Ê', 'Ë', 'Ì', 'Í',
+			'Î', 'Ï', 'Ð', 'Ñ', 'Ò',
+			'Ó', 'Ô', 'Õ', 'Ö', '×',
+			'Ø', 'Ù', 'Ú', 'Û', 'Ü',
+			'Ý', 'Þ', 'ß' };
+	}
+	char RusAlphabet::get(int letterNumber) const {
+		if (letterNumber <= 0 || letterNumber > 33) {
+			throw std::invalid_argument(EXCEPT("Invalid number of letter"));
+		}
+		letterNumber--;
+		return letters[letterNumber];
+	}
+	size_t RusAlphabet::size() const noexcept {
+		return 33;
+	}
+	
+
 	std::string GetOutStrTrash(std::string str) {
 		auto it = std::find(begin(str), end(str), '.');
 		str.erase(it, end(str));
@@ -112,7 +135,7 @@ namespace Program {
 		not_to_dif = cp.not_to_dif;
 	}
 	Knowledge::Knowledge(const map<string, string>& cp) {
-		if (not_to_dif.empty()) { 
+		if (!not_to_dif.empty()) { 
 			not_to_dif.clear(); 
 		}
 		not_to_dif = cp;
@@ -121,7 +144,7 @@ namespace Program {
 		string db = GetOutStrTrash(filename) + "." + "temp.txt";
 		std::ifstream fin;
 
-		if (is_clear == ifc::DURTY) {
+		if (is_clear == ifc::drt) {
 			GetOutTrash(filename, db);
 			fin.open(db);
 		}
@@ -145,7 +168,7 @@ namespace Program {
 				not_to_dif.insert({ { begin(temp_notion), it - 1 },{ it + 2,end(temp_notion) } });
 			}
 		}
-		if (is_clear == ifc::DURTY) {
+		if (is_clear == ifc::drt) {
 			fin.close();
 			system((string("del ") + db).c_str());
 		}
@@ -186,13 +209,16 @@ namespace Program {
 		});
 	}
 
-	void Knowledge::DumpToFile() const noexcept{
+	void Knowledge::DumpToFile(string FileName) const noexcept{
 		if (not_to_dif.empty()) {
 			return;
 		}
-		static int countobj = 1;
-		std::ofstream fout("db" + std::to_string(countobj) + ".txt");
-		countobj++;
+		if (FileName == "") {
+			static int countobj = 1;
+			FileName = string("DumpToFile" + std::to_string(countobj) + ".txt");
+			++countobj;
+		}
+		std::ofstream fout(FileName);
 		fout << not_to_dif;
 	}
 
@@ -210,6 +236,25 @@ namespace Program {
 		//not_to_dif.erase(it);
 	}
 	
+
+	size_t Knowledge::usingLetters() const noexcept {
+		if (not_to_dif.empty()) {
+			return 0;
+		}
+
+		size_t count = 0;
+		for (int i(1); i <= 33; ++i) {
+			try {
+				if (!unde_the_letter(RusLetters.get(i)).empty()) {
+					++count;
+				}
+			}
+			catch (const std::exception& exc) {
+				continue;
+			}
+		}
+		return count;
+	}
 
 	map<string, string> Knowledge::find_dif(const string& notif) const noexcept {
 		map<string, string> ret;
@@ -235,34 +280,62 @@ namespace Program {
 		});
 
 		auto it_end = it;
-		while (it_end->first[0] == letter) {
+		while (it_end != end(not_to_dif) && it_end->first[0] == letter) {
 			++it_end;
 		}
 		return { it, it_end };
 	}
-	map<string, string> Knowledge::GetSomeNotif(size_t n, const set<char>& letters) const{
-		if (letters.empty() || n < letters.size()) {
+	map<string, string> Knowledge::GetSomeNotif(size_t TermCount, size_t LettersCount) const{
+		if (TermCount > not_to_dif.size() || TermCount < LettersCount * 30) {
 			throw std::invalid_argument(EXCEPT("Invalid arguments"));
 		}
 		map<string, string> ret;
+		vector<pair<string, string>> temp;
 		srand(time(NULL));
 
-		
+		for (int i(1); i <= 33; ++i) {
+			try {
+				temp = { map<string, string>{ unde_the_letter(RusLetters.get(i)).begin(),
+					unde_the_letter(RusLetters.get(i)).end() }.begin() , 
+					map<string, string> { unde_the_letter(RusLetters.get(i)).begin(),
+					unde_the_letter(RusLetters.get(i)).end() }.end() };
+			}
+			catch (const std::exception& exc) {
+				continue;
+			}
+
+			if (temp.empty()) {
+				continue;
+			}
+
+			int letcount = LettersCount > temp.size() ? temp.size() : LettersCount;
+			for (int j(0); j < letcount; ++j) {
+				ret.insert(temp[rand() % temp.size()]);
+			}
+
+		}
+		while (ret.size() < TermCount * Knowledge{ ret }.usingLetters()) {
+			map<string, string> temp = GetSomeNotif(TermCount - ret.size());
+			std::set_union(begin(ret), end(ret),
+				begin(temp), end(temp),
+				std::inserter(ret, end(ret)));
+		}
 
 		return ret;
 	}
-	map<string, string> Knowledge::GetSomeNotif(size_t n) const {
+	map<string, string> Knowledge::GetSomeNotif(size_t TermCount) const {
 		map<string, string> ret;
 		vector<pair<string, string>> val(begin(not_to_dif), end(not_to_dif));
 		size_t size = not_to_dif.size();
+
 		srand(time(NULL));
 		
-		for (size_t i(0); i < n; i++) {
+		for (size_t i(0); i < TermCount; ++i) {
 			ret.insert(val[rand() % size]);
 		}
 
-		while (ret.size() < n) {
-			map<string, string> temp = GetSomeNotif(n - ret.size());
+		while (ret.size() < TermCount) {
+			map<string, string> temp = GetSomeNotif(TermCount - ret.size());
 			std::set_union(begin(ret), end(ret), 
 				begin(temp), end(temp), 
 				std::inserter(ret, end(ret)));

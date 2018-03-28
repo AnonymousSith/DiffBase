@@ -23,9 +23,10 @@ using namespace Program;
 int main() {
 	setlocale(LC_ALL, "Russian");
 
-	Knowledge db3("db1.txt", ifc::CLEAR);
-	std::cout << db3.GetSomeNotif(30);
-	db3.DumpToFile();
+	Knowledge db3("first_and_second.txt", ifc::clr);
+	std::cout << db3.GetSomeNotif(100, 3);
+	
+	//db3.DumpToFile();
 	_getch();
 	return 0;
 }
