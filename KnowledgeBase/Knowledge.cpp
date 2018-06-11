@@ -1,4 +1,5 @@
 #include "Knowledge.h"
+#define CheckNow "CheckKnow.txt"
 	
 namespace Program {
 	RusAlphabet RusLetters;
@@ -130,6 +131,35 @@ namespace Program {
 			is_contain(SplitIntoWords(lhs), SplitIntoWords(notif));
 	}
 
+	pair<string, string> Knowledge::DivideStr(const string& val) const{
+		if (std::count(begin(val), end(val), '—') < 1) {
+			throw 
+				std::invalid_argument(
+				EXCEPT(
+				"This string is not consistenc with template: notiffication - diffinition")
+			);
+		}
+
+		auto it = find(begin(val), end(val), '—');
+		return { { begin(val), it - 1 }, { it + 2, end(val) } };
+	}
+
+	void Knowledge::PullRememberDiffIntoFile() const{
+		std::ifstream fin(CheckNow);
+
+		if (fin.is_open()) {
+			string temp = "";
+			while (!fin.eof()) {
+				std::getline(fin, temp);
+				try {
+					ChechRemember.insert(DivideStr(temp));
+				}
+				catch (...) {}
+			}
+		}
+	}
+
+
 	Knowledge::Knowledge(const Knowledge& cp) {
 		not_to_dif.clear();
 		not_to_dif = cp.not_to_dif;
@@ -161,11 +191,12 @@ namespace Program {
 		if (fin) {
 			while (!fin.eof()) {
 				getline(fin, temp_notion);
-				if (std::count(begin(temp_notion), end(temp_notion), '—') < 1) {
+				try{
+					not_to_dif.insert(DivideStr(temp_notion));
+				}
+				catch (const std::exception& exc) {
 					continue;
 				}
-				auto it = find(begin(temp_notion), end(temp_notion), '—');
-				not_to_dif.insert({ { begin(temp_notion), it - 1 },{ it + 2,end(temp_notion) } });
 			}
 		}
 		if (is_clear == ifc::drt) {
@@ -209,6 +240,14 @@ namespace Program {
 		});
 	}
 
+	void Knowledge::DumpRemember2File() const {
+		if (ChechRemember.empty()) {
+			return;
+		}
+
+		std::ofstream fout(CheckNow);
+		fout << ChechRemember << std::endl;
+	}
 	void Knowledge::DumpToFile(string FileName) const noexcept{
 		if (not_to_dif.empty()) {
 			return;
@@ -220,6 +259,8 @@ namespace Program {
 		}
 		std::ofstream fout(FileName);
 		fout << not_to_dif;
+
+		DumpRemember2File();
 	}
 
 	void Knowledge::Add(const pair<string, string>& val) {
@@ -255,6 +296,25 @@ namespace Program {
 		}
 		return count;
 	}
+
+	void Knowledge::DiffForDay(const string& FileName) const {
+		PullRememberDiffIntoFile();
+
+		map<string, string> intersection;
+
+		std::set_intersection(begin(not_to_dif), end(not_to_dif),
+			begin(ChechRemember), end(ChechRemember), std::inserter(intersection, begin(intersection)));
+
+		std::ofstream fout(FileName);
+		auto temp = Knowledge{ intersection }.GetSomeNotif(25);
+		fout << temp;
+		
+		std::set_union(begin(ChechRemember), end(ChechRemember),
+			begin(temp), end(temp), std::inserter(ChechRemember, end(ChechRemember)));
+
+		DumpRemember2File();
+	}
+	
 
 	map<string, string> Knowledge::find_dif(const string& notif) const noexcept {
 		map<string, string> ret;

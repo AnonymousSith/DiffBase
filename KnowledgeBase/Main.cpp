@@ -19,14 +19,20 @@ void PrintFile(const string& filename) {
 }
 
 using namespace Program;
+using know = Knowledge;
 
 int main() {
 	setlocale(LC_ALL, "Russian");
 
-	Knowledge db3("first_and_second.txt", ifc::clr);
-	std::cout << db3.GetSomeNotif(100, 3);
-	
-	//db3.DumpToFile();
+	//know latin("C:\\Users\\Кирилл\\Desktop\\latin.txt");
+	//latin.DumpToFile("C:\\Users\\Кирилл\\Desktop\\dmp.lat.txt");
+
+	/*std::ofstream fout("diff_for_day.txt");
+	know db1("1_and_2.txt");
+
+	fout << db1.GetSomeNotif(25);*/
+
+	//db1.DumpToFile("1_and_2.txt");
 	_getch();
 	return 0;
 }

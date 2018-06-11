@@ -42,6 +42,11 @@ namespace Program {
 	class Knowledge {
 	private:
 		map<string, string> not_to_dif; // термин - определение
+
+		mutable map<string, string> ChechRemember;
+
+		void PullRememberDiffIntoFile() const;
+		pair<string, string> DivideStr(const string&) const;
 		
 		friend string GetOutStrTrash(string);
 		friend vector<string> SplitIntoWords(const string&);
@@ -78,9 +83,12 @@ namespace Program {
 		map<string, string> GetSomeNotif(size_t, size_t) const;
 		map<string, string> GetSomeNotif(size_t) const;
 
+		void DumpRemember2File() const;
 		void DumpToFile(string FileName="") const noexcept;
 
 		size_t usingLetters() const noexcept;
+
+		void DiffForDay(const string& FileName) const;
 
 		void Add(const pair<string, string>&);
 		void Remove(const string&);
