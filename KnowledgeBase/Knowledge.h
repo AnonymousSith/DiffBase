@@ -26,31 +26,21 @@ using std::string;
 using std::vector;
 
 namespace Program {
-	enum class is_file_clear { clr = true, drt = false };
+	enum class is_file_clear { clr = true, drt = false }; // have a file trash or not
 	using ifc = is_file_clear;
 
-	class RusAlphabet {
-	private:
-		vector<char> letters;
-	public:
-		RusAlphabet();
-		char get(int) const;
-		size_t size() const noexcept;
-	};
-
-	
 	class Knowledge {
 	private:
-		map<string, string> not_to_dif; // термин - определение
-
-		mutable map<string, string> ChechRemember;
-
-		void PullRememberDiffIntoFile() const;
-		pair<string, string> DivideStr(const string&) const;
+		map<string, string> term_to_dif; // term - diffinition
 		
-		friend string GetOutStrTrash(string);
-		friend vector<string> SplitIntoWords(const string&);
-		friend bool is_contain(vector<string>, vector<string>);
+		mutable map<string, string> UsedWords; // already learned words
+
+		void FillRememberDiffFromFile() const; // Fill in the repository of already learned words
+		pair<string, string> DivideStr(const string&) const; // divides a string into a pair<term, diffinition>
+		
+		friend string GetOutFileType(string); // removes type of a file from the string
+		friend vector<string> SplitIntoWords(const string&); // divides a string into vector<words>
+		friend bool is_contain(vector<string>, vector<string>); // finds word intersections
 	public:
 		Knowledge() {};
 		Knowledge(const Knowledge&);
@@ -58,35 +48,30 @@ namespace Program {
 		Knowledge(const string&, ifc is_clear=ifc::drt);
 		Knowledge& operator=(const Knowledge&);
 
-		Knowledge operator+(const Knowledge&) const noexcept;
+		Knowledge operator+(const Knowledge&) const noexcept; // unite a KnowBases
 		Knowledge& operator+=(const Knowledge&);
 
-		pair<string, string> operator[](size_t) const;
+		pair<string, string> operator[](size_t) const; // beginning 0
 
 		size_t size() const {
-			return not_to_dif.size();
+			return term_to_dif.size();
 		}
 
 		auto _begin() const{
-			return not_to_dif.begin();
+			return term_to_dif.begin();
 		}
 		auto _end() const {
-			return not_to_dif.end();
+			return term_to_dif.end();
 		}
 
 		int count(const string&) const;
 
-		map<string, string> find_dif(const string&) const noexcept;
-
-		map<string, string> unde_the_letter(char) const;
-
-		map<string, string> GetSomeNotif(size_t, size_t) const;
-		map<string, string> GetSomeNotif(size_t) const;
+		map<string, string> FindDif(const string&)	const;	// returns similar words
+		map<string, string> UndeTheLetter(char)		const;	// find all words unde the lettes
+		map<string, string> GetSomeNotif(size_t)	const;	// returns N terms
 
 		void DumpRemember2File() const;
 		void DumpToFile(string FileName="") const noexcept;
-
-		size_t usingLetters() const noexcept;
 
 		void DiffForDay(const string& FileName) const;
 
@@ -96,7 +81,7 @@ namespace Program {
 		friend void GetOutTrash(const string&, const string&);
 		friend bool operator==(const string&, const string&);
 		friend std::ostream& operator<<(std::ostream& os, const Knowledge& value) {
-			return os << value.not_to_dif;
+			return os << value.term_to_dif;
 		}
 	};
 }

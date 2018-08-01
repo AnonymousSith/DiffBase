@@ -1,34 +1,16 @@
 #include "Knowledge.h"
-#define CheckNow "CheckKnow.txt"
+#define CheckKnow "CheckKnow" // name of the repository of the already learned words
 	
 namespace Program {
-	RusAlphabet RusLetters;
-
-	RusAlphabet::RusAlphabet() {
-		letters = { 'À', 'Á', 'Â', 'Ã', 'Ä',
-			'Å', '¨', 'Æ', 'Ç', 'È',
-			'É', 'Ê', 'Ë', 'Ì', 'Í',
-			'Î', 'Ï', 'Ð', 'Ñ', 'Ò',
-			'Ó', 'Ô', 'Õ', 'Ö', '×',
-			'Ø', 'Ù', 'Ú', 'Û', 'Ü',
-			'Ý', 'Þ', 'ß' };
-	}
-	char RusAlphabet::get(int letterNumber) const {
-		if (letterNumber <= 0 || letterNumber > 33) {
-			throw std::invalid_argument(EXCEPT("Invalid number of letter"));
+	std::string GetOutFileType(std::string filename) {
+		if (filename.empty()) {
+			throw std::invalid_argument(EXCEPT("Wrond filename"));
 		}
-		letterNumber--;
-		return letters[letterNumber];
-	}
-	size_t RusAlphabet::size() const noexcept {
-		return 33;
-	}
-	
 
-	std::string GetOutStrTrash(std::string str) {
-		auto it = std::find(begin(str), end(str), '.');
-		str.erase(it, end(str));
-		return str;
+		auto it = std::find(begin(filename), end(filename), '.');
+		filename.erase(it, end(filename));
+
+		return filename;
 	}
 	void GetOutTrash(const string& in, const string& out) {
 		if (in.empty() || out.empty()) {
@@ -41,28 +23,29 @@ namespace Program {
 			throw std::runtime_error(EXCEPT("File is not open"));
 		}
 		set<string> mediator;
-		string temp;
+		string temp = "";
 
-		string::iterator cyle_iter;
+		string::iterator cyle_iter; // just iterator for different use in the cycle
 		if (fin) {
 			while (!fin.eof()) {
 				getline(fin, temp);
 
 				cyle_iter = remove_if(begin(temp), end(temp),
 					[](const char& sym) {
-					return sym == '\t' || sym == '\n';
+					return sym == '\t' || sym == '\n';	// while end of a string
 				});
-				temp.erase(cyle_iter, end(temp));
-				if (temp.empty() || temp.size() < 2) {
+				temp.erase(cyle_iter, end(temp));		// delete all after end
+
+				if (temp.empty() || temp.size() < 2) {	// is this string trash
 					continue;
 				}
 
 				cyle_iter = begin(temp);
-				while (*cyle_iter == ' ' && !temp.empty()) {
+				while (*cyle_iter == ' ' && !temp.empty()) { // delete empty begin
 					temp.erase(cyle_iter);
 				}
 
-				mediator.insert(temp);
+				mediator.insert(temp); // only after all tests the string goes to the repository
 			}
 		}
 		mediator.erase("");
@@ -74,12 +57,14 @@ namespace Program {
 		vector<string> result;
 
 		auto str_begin = begin(str);
-		const auto str_end = end(str);
+		const auto str_end = end(str); // end iterator don't changes
+
+		string::const_iterator it; // cycle iterator
 
 		while (true) {
-			auto it = find(str_begin, str_end, ' ');
+			it = find(str_begin, str_end, ' '); // find the gap
 
-			result.push_back(string(str_begin, it));
+			result.push_back(string{ str_begin, it }); // convert interval from begin to the gap into string
 
 			if (it == str_end) {
 				break;
@@ -92,11 +77,14 @@ namespace Program {
 	}
 	bool is_contain(vector<string> lhs, vector<string> rhs) {
 		vector<string> ret;
-		std::sort(begin(lhs), end(lhs));
+
+		std::sort(begin(lhs), end(lhs)); // set_intersection does't working with unsorted vectors
 		std::sort(begin(rhs), end(rhs));
+
 		std::set_intersection(begin(lhs), end(lhs),
 			begin(rhs), end(rhs),
 			std::inserter(ret, begin(ret)));
+
 		return !ret.empty();
 	}
 
@@ -107,8 +95,8 @@ namespace Program {
 			if (is_contain(SplitIntoWords(lhs), SplitIntoWords(notif))) {
 				return true;
 			}
-			int size = lhs.size() < notif.size() ? lhs.size() : notif.size();
-			for (int i(0); i < size; i++) {
+			int size = lhs.size() < notif.size() ? lhs.size() : notif.size(); // find a smaller size
+			for (int i(0); i < size; ++i) {
 				if (lhs[i] == notif[i]) {
 					is_equal.push_back(true);
 				}
@@ -118,7 +106,7 @@ namespace Program {
 			}
 		}
 		else {
-			for (size_t i(0); i < notif.size(); i++) {
+			for (size_t i(0); i < notif.size(); ++i) {
 				if (lhs[i] == notif[i]) {
 					is_equal.push_back(true);
 				}
@@ -127,8 +115,8 @@ namespace Program {
 				}
 			}
 		}
-		return std::count(begin(is_equal), end(is_equal), true) > (is_equal.size() / 2.f) ||
-			is_contain(SplitIntoWords(lhs), SplitIntoWords(notif));
+		return std::count(begin(is_equal), end(is_equal), true) > (is_equal.size() / 2.f) || // if more than half of the letters in a word match, the words are considered equal
+			is_contain(SplitIntoWords(lhs), SplitIntoWords(notif)); // and if the strings contain the same words too
 	}
 
 	pair<string, string> Knowledge::DivideStr(const string& val) const{
@@ -144,15 +132,15 @@ namespace Program {
 		return { { begin(val), it - 1 }, { it + 2, end(val) } };
 	}
 
-	void Knowledge::PullRememberDiffIntoFile() const{
-		std::ifstream fin(CheckNow);
+	void Knowledge::FillRememberDiffFromFile() const{
+		std::ifstream fin(CheckKnow);
 
 		if (fin.is_open()) {
 			string temp = "";
 			while (!fin.eof()) {
 				std::getline(fin, temp);
 				try {
-					ChechRemember.insert(DivideStr(temp));
+					UsedWords.insert(DivideStr(temp));
 				}
 				catch (...) {}
 			}
@@ -161,22 +149,22 @@ namespace Program {
 
 
 	Knowledge::Knowledge(const Knowledge& cp) {
-		not_to_dif.clear();
-		not_to_dif = cp.not_to_dif;
+		term_to_dif.clear();
+		term_to_dif = cp.term_to_dif;
 	}
 	Knowledge::Knowledge(const map<string, string>& cp) {
-		if (!not_to_dif.empty()) { 
-			not_to_dif.clear(); 
+		if (!term_to_dif.empty()) { 
+			term_to_dif.clear(); 
 		}
-		not_to_dif = cp;
+		term_to_dif = cp;
 	}
 	Knowledge::Knowledge(const string& filename, ifc is_clear) {
-		string db = GetOutStrTrash(filename) + "." + "temp.txt";
+		string TempFile = GetOutFileType(filename) + "." + "temp.txt";
 		std::ifstream fin;
 
-		if (is_clear == ifc::drt) {
-			GetOutTrash(filename, db);
-			fin.open(db);
+		if (is_clear == ifc::drt) { 
+			GetOutTrash(filename, TempFile); // if the file is dirty clear file
+			fin.open(TempFile); // create a temp file
 		}
 		else {
 			fin.open(filename);
@@ -186,33 +174,31 @@ namespace Program {
 			throw std::runtime_error(EXCEPT("File is not open!"));
 		}
 
-		string temp_notion;
+		string temp_notion = "";
 			
 		if (fin) {
 			while (!fin.eof()) {
 				getline(fin, temp_notion);
 				try{
-					not_to_dif.insert(DivideStr(temp_notion));
+					term_to_dif.insert(DivideStr(temp_notion));
 				}
-				catch (const std::exception& exc) {
-					continue;
-				}
+				catch (...) {}
 			}
 		}
 		if (is_clear == ifc::drt) {
 			fin.close();
-			system((string("del ") + db).c_str());
+			system((string("del ") + TempFile).c_str()); // delete temp file
 		}
 	}
 	Knowledge& Knowledge::operator=(const Knowledge& val) {
-		not_to_dif = val.not_to_dif;
+		term_to_dif = val.term_to_dif;
 		return *this;
 	}
 
 	Knowledge Knowledge::operator+(const Knowledge& val) const noexcept {
 		map<string, string> ret;
-		std::set_union(begin(not_to_dif), end(not_to_dif),
-			begin(val.not_to_dif), end(val.not_to_dif), std::inserter(ret, begin(ret)));
+		std::set_union(begin(term_to_dif), end(term_to_dif),
+			begin(val.term_to_dif), end(val.term_to_dif), std::inserter(ret, begin(ret)));
 		return ret;
 	}
 	Knowledge& Knowledge::operator+=(const Knowledge& val) {
@@ -220,12 +206,12 @@ namespace Program {
 	}
 
 	pair<string, string> Knowledge::operator[](size_t index) const {
-		if (index > not_to_dif.size()) {
-			throw std::out_of_range(EXCEPT("Index more than range size"));
+		if (index > term_to_dif.size()) {
+			throw std::out_of_range(EXCEPT("Index are more than the range size"));
 		}
 
 		size_t i = 0;
-		for (const auto& item : not_to_dif) {
+		for (const auto& item : term_to_dif) {
 			if (i == index) {
 				return item;
 			}
@@ -234,22 +220,26 @@ namespace Program {
 	}
 
 	int Knowledge::count(const string& dif) const {
-		return count_if(begin(not_to_dif), end(not_to_dif),
+		return count_if(begin(term_to_dif), end(term_to_dif),
 			[dif](const pair<string, string>& val) {
 			return val.first == dif;
 		});
 	}
 
 	void Knowledge::DumpRemember2File() const {
-		if (ChechRemember.empty()) {
+		if (UsedWords.empty()) {
 			return;
 		}
 
-		std::ofstream fout(CheckNow);
-		fout << ChechRemember << std::endl;
+		//time_t t = time(NULL);
+		std::ofstream fout(CheckKnow);
+
+		//fout << puts(ctime(&t)) << std::endl;
+		fout << UsedWords << std::endl;
+		//fout << "__________________________________________________________________________________________________________" << std::endl;
 	}
 	void Knowledge::DumpToFile(string FileName) const noexcept{
-		if (not_to_dif.empty()) {
+		if (term_to_dif.empty()) {
 			return;
 		}
 		if (FileName == "") {
@@ -258,135 +248,95 @@ namespace Program {
 			++countobj;
 		}
 		std::ofstream fout(FileName);
-		fout << not_to_dif;
+		fout << term_to_dif;
 
 		DumpRemember2File();
 	}
 
 	void Knowledge::Add(const pair<string, string>& val) {
 		if (val.first.empty() || val.second.empty()) {
-			throw std::invalid_argument(EXCEPT("Invalid notification of diffinition"));
+			throw std::invalid_argument(EXCEPT("Invalid notification or diffinition"));
 		}
-		not_to_dif.insert(val);
+		term_to_dif.insert(val);
 	}
 	void Knowledge::Remove(const string& key) {
-		if (not_to_dif.empty()) {
+		if (term_to_dif.empty()) {
 			return;
 		}
-		//auto it = std::remove(begin(not_to_dif), end(not_to_dif), key);
-		//not_to_dif.erase(it);
+		//auto it = std::remove(begin(term_to_dif), end(term_to_dif), key);
+		//term_to_dif.erase(it);
 	}
 	
-
-	size_t Knowledge::usingLetters() const noexcept {
-		if (not_to_dif.empty()) {
-			return 0;
-		}
-
-		size_t count = 0;
-		for (int i(1); i <= 33; ++i) {
-			try {
-				if (!unde_the_letter(RusLetters.get(i)).empty()) {
-					++count;
-				}
-			}
-			catch (const std::exception& exc) {
-				continue;
-			}
-		}
-		return count;
-	}
-
 	void Knowledge::DiffForDay(const string& FileName) const {
-		PullRememberDiffIntoFile();
+		FillRememberDiffFromFile();
 
-		map<string, string> intersection;
+		map<string, string> copy = term_to_dif; // just copy
+		map<string, string> intersection; // intersection between a general repository and a repository of already used words
 
-		std::set_intersection(begin(not_to_dif), end(not_to_dif),
-			begin(ChechRemember), end(ChechRemember), std::inserter(intersection, begin(intersection)));
+		std::set_intersection(begin(term_to_dif), end(term_to_dif),
+			begin(UsedWords), end(UsedWords), std::inserter(intersection, begin(intersection)));
 
+		map<string, string>::iterator it;
+
+		for (const auto& item : intersection) {
+			it = find(begin(copy), end(copy), item);
+			copy.erase(it);
+		}
+
+		auto temp = Knowledge{ copy }.GetSomeNotif(25);
+		
 		std::ofstream fout(FileName);
-		auto temp = Knowledge{ intersection }.GetSomeNotif(25);
 		fout << temp;
 		
-		std::set_union(begin(ChechRemember), end(ChechRemember),
-			begin(temp), end(temp), std::inserter(ChechRemember, end(ChechRemember)));
+		std::set_union(begin(UsedWords), end(UsedWords),
+			begin(temp), end(temp), std::inserter(UsedWords, end(UsedWords)));
 
 		DumpRemember2File();
 	}
 	
-
-	map<string, string> Knowledge::find_dif(const string& notif) const noexcept {
+	map<string, string> Knowledge::FindDif(const string& notif) const {
 		map<string, string> ret;
 
-		for (const auto& item : not_to_dif) {
+		for (const auto& item : term_to_dif) {
 			if (item.first == notif) {
 				ret.insert(item);
 			}
 		}
-			return ret;
+
+		return ret;
 	}
-	map<string, string> Knowledge::unde_the_letter(char letter) const {
-		if (std::count_if(begin(not_to_dif), end(not_to_dif),
+	map<string, string> Knowledge::UndeTheLetter(char letter) const {
+		if (std::count_if(begin(term_to_dif), end(term_to_dif),
 			[letter](const pair<string, string>& val) {
 			return val.first[0] == letter;
 		}) < 1) {
-			throw std::runtime_error(EXCEPT("Not found. May be wrong register"));
+			throw std::runtime_error(EXCEPT("Words unde the letter not found. May be wrong register"));
 		}
 
-		auto it = std::find_if(begin(not_to_dif), end(not_to_dif),
+		auto it = std::find_if(begin(term_to_dif), end(term_to_dif),
 			[letter](const pair<string, string>& val) {
 			return val.first[0] == letter;
 		});
 
-		auto it_end = it;
-		while (it_end != end(not_to_dif) && it_end->first[0] == letter) {
+		auto it_end = it; // iterator for end of the letter range
+
+		while (it_end != end(term_to_dif) && it_end->first[0] == letter) {
 			++it_end;
 		}
 		return { it, it_end };
 	}
-	map<string, string> Knowledge::GetSomeNotif(size_t TermCount, size_t LettersCount) const{
-		if (TermCount > not_to_dif.size() || TermCount < LettersCount * 30) {
-			throw std::invalid_argument(EXCEPT("Invalid arguments"));
-		}
-		map<string, string> ret;
-		vector<pair<string, string>> temp;
-		srand(time(NULL));
-
-		for (int i(1); i <= 33; ++i) {
-			try {
-				temp = { map<string, string>{ unde_the_letter(RusLetters.get(i)).begin(),
-					unde_the_letter(RusLetters.get(i)).end() }.begin() , 
-					map<string, string> { unde_the_letter(RusLetters.get(i)).begin(),
-					unde_the_letter(RusLetters.get(i)).end() }.end() };
-			}
-			catch (const std::exception& exc) {
-				continue;
-			}
-
-			if (temp.empty()) {
-				continue;
-			}
-
-			int letcount = LettersCount > temp.size() ? temp.size() : LettersCount;
-			for (int j(0); j < letcount; ++j) {
-				ret.insert(temp[rand() % temp.size()]);
-			}
-
-		}
-		while (ret.size() < TermCount * Knowledge{ ret }.usingLetters()) {
-			map<string, string> temp = GetSomeNotif(TermCount - ret.size());
-			std::set_union(begin(ret), end(ret),
-				begin(temp), end(temp),
-				std::inserter(ret, end(ret)));
-		}
-
-		return ret;
-	}
 	map<string, string> Knowledge::GetSomeNotif(size_t TermCount) const {
+		if (TermCount > term_to_dif.size()) {
+			throw std::invalid_argument(EXCEPT("Your number more then size of the base\a"));
+		}
+		if (TermCount == term_to_dif.size()) {
+			return term_to_dif;
+		}
+
+		
 		map<string, string> ret;
-		vector<pair<string, string>> val(begin(not_to_dif), end(not_to_dif));
-		size_t size = not_to_dif.size();
+		vector<pair<string, string>> val(begin(term_to_dif), end(term_to_dif)); // duplicate to more comfortable use
+		size_t size = term_to_dif.size(); // to reduce calculations
 
 		srand(time(NULL));
 		
