@@ -26,7 +26,7 @@ using know = Knowledge;
 
 int main(int argc, char* argv[]) {
 	setlocale(LC_ALL, "Russian");
-	
+
 	/*vector<string> agv;
 	for (size_t i(0); i < argc; ++i) {
 		agv.push_back(argv[i]);
