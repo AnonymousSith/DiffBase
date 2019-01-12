@@ -120,15 +120,24 @@ namespace Program {
 	}
 
 	pair<string, string> Knowledge::DivideStr(const string& val) const{
-		if (std::count(begin(val), end(val), '—') < 1) {
-			throw 
-				std::invalid_argument(
-				EXCEPT(
-				"This string is not consistenc with template: notiffication - diffinition")
-			);
+		char divide = '–';
+		if (std::count(begin(val), end(val), divide) < 1) {
+			divide = '–';
+		}
+		if (std::count(begin(val), end(val), divide) < 1) {
+			divide = '—';
 		}
 
-		auto it = find(begin(val), end(val), '—');
+
+		if (std::count(begin(val), end(val), divide) < 1) {
+			throw
+				std::invalid_argument(
+					EXCEPT(
+						"This string is not consistenc with template: notiffication - diffinition")
+				);
+		}
+
+		auto it = find(begin(val), end(val), divide);
 		return { { begin(val), it - 1 }, { it + 2, end(val) } };
 	}
 
@@ -180,7 +189,17 @@ namespace Program {
 			while (!fin.eof()) {
 				getline(fin, temp_notion);
 				try{
-					term_to_dif.insert(DivideStr(temp_notion));
+					if (term_to_dif.count(DivideStr(temp_notion).first) >= 1) {
+						auto tmp = *term_to_dif.find(DivideStr(temp_notion).first);
+						tmp.second.pop_back();
+						string insert = tmp.second + "; " + DivideStr(temp_notion).second;
+						
+						term_to_dif.erase(tmp.first);
+						term_to_dif.insert({ DivideStr(temp_notion).first, insert });
+					}
+					else {
+						term_to_dif.insert(DivideStr(temp_notion));
+					}
 				}
 				catch (...) {}
 			}

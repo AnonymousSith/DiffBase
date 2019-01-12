@@ -66,7 +66,7 @@ namespace Program {
 
 		int count(const string&) const;
 
-		map<string, string> FindDif(const string&)	const;	// returns similar words
+		map<string, string> FindDif(const string&)	const;	// returns simular words
 		map<string, string> UndeTheLetter(char)		const;	// find all words unde the letter
 		map<string, string> GetSomeNotif(size_t)	const;	// returns N terms
 

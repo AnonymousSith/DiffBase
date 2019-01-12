@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
 	}*/
 
 	const know data("data");
-	
+
 	char command = '\0';
 	std::string cycle_str = "";
 	size_t count = 0;
