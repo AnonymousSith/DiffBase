@@ -77,6 +77,7 @@ namespace Program {
 
 		void Add(const pair<string, string>&);
 		void Remove(const string&);
+		void shuffle();
 
 		friend void GetOutTrash(const string&, const string&);
 		friend bool operator==(const string&, const string&);

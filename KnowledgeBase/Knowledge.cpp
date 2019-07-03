@@ -6,7 +6,7 @@ namespace Program {
 		if (filename.empty()) {
 			throw std::invalid_argument(EXCEPT("Wrond filename"));
 		}
-
+		
 		auto it = std::find(begin(filename), end(filename), '.');
 		filename.erase(it, end(filename));
 
@@ -30,7 +30,7 @@ namespace Program {
 			while (!fin.eof()) {
 				getline(fin, temp);
 
-				cyle_iter = remove_if(begin(temp), end(temp),
+				cyle_iter = std::remove_if(begin(temp), end(temp),
 					[](const char& sym) {
 					return sym == '\t' || sym == '\n';	// while end of a string
 				});
@@ -284,6 +284,9 @@ namespace Program {
 		}
 		//auto it = std::remove(begin(term_to_dif), end(term_to_dif), key);
 		//term_to_dif.erase(it);
+	}
+	void Knowledge::shuffle() {
+		std::random_shuffle(term_to_dif.begin(), term_to_dif.end());
 	}
 	
 	void Knowledge::DiffForDay(const string& FileName) const {
