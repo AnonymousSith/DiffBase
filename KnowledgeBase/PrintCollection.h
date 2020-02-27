@@ -17,13 +17,13 @@ using std::string;
 
 template<typename Collection, typename D> string Join(const Collection& c, const D& d) {
 	std::stringstream ss;
-	bool is_fisrt = true;
+	bool is_first = true;
 
 	for (const auto& item : c) {
-		if (!is_fisrt) {
+		if (!is_first) {
 			ss << d;
 		}
-		is_fisrt = false;
+		is_first = false;
 		ss << item;
 	}
 	return ss.str();
